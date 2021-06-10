@@ -1,0 +1,9 @@
+packages:
+  - mongodb
+  - openjdk-11-jdk
+
+package_update: true
+package_upgrade: true
+package_reboot_if_required: true
+
+manage_etc_hosts: "localhost"
