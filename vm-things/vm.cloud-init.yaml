@@ -1,6 +1,7 @@
 packages:
-  - mongodb
-  - openjdk-11-jdk
+ - mongodb
+ - openjdk-11-jdk
+
 
 package_update: true
 package_upgrade: true
