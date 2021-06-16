@@ -21,7 +21,7 @@ public class MqttManager {
   // get a circuit breaker
   private CircuitBreaker getBreaker(Vertx vertx) {
     if(breaker==null) {
-      //breaker = //  create the circuit breaker
+      breaker = //  create the circuit breaker
     }
     return breaker;
   }
@@ -36,7 +36,7 @@ public class MqttManager {
 
     return getBreaker(vertx).execute(promise -> {
 
-      //mqttClient = // create the mqtt client
+      mqttClient = // create the mqtt client
 
       // some code executing with the breaker
       // the code reports failures or success on the given promise.
