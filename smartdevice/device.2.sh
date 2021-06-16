@@ -1,5 +1,6 @@
 #!/bin/bash
 HTTP_PORT="8082" \
+DEVICE_TYPE="http" \
 DEVICE_LOCATION="garden" \
 DEVICE_ID="BVOP34" \
 GATEWAY_TOKEN="smart.home" \

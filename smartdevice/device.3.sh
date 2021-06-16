@@ -1,5 +1,6 @@
 #!/bin/bash
 HTTP_PORT="8083" \
+DEVICE_TYPE="http" \
 DEVICE_LOCATION="bathroom" \
 DEVICE_ID="OPRH67" \
 GATEWAY_TOKEN="smart.home" \

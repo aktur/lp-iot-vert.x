@@ -1,5 +1,6 @@
 #!/bin/bash
 HTTP_PORT="8081" \
+DEVICE_TYPE="http" \
 DEVICE_LOCATION="bedroom" \
 DEVICE_ID="AX3345" \
 GATEWAY_TOKEN="smart.home" \
