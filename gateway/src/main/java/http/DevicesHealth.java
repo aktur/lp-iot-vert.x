@@ -41,7 +41,27 @@ public class DevicesHealth {
         System.out.println("Discovery error: " + error.getMessage());
       })
       .onSuccess(okRecords -> {
+        okRecords.forEach(record -> {
+          var location = record.getLocation();
 
+          webClient.get(location.getInteger("port"), location.getString("host"), "/").send()
+            .onFailure(error -> {
+              System.out.println("Unable to connect: " + error.getMessage());
+              getDiscovery().unpublish(record.getRegistration());
+            })
+            .onSuccess(data ->{
+              // send MQTT Message
+              if(mqttClient!=null) {
+                if(mqttClient.isConnected()) {
+                  mqttClient.publish(mqttTopic,
+                    Buffer.buffer(data.bodyAsJsonObject().encode()),
+                    MqttQoS.AT_LEAST_ONCE, // AT_LEAST_ONCE
+                    false,
+                    false
+                  );
+              }
+            }});
+        });
       });
   };
 }

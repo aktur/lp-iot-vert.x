@@ -21,7 +21,13 @@ public class MqttManager {
   // get a circuit breaker
   private CircuitBreaker getBreaker(Vertx vertx) {
     if(breaker==null) {
-      breaker = //  create the circuit breaker
+      breaker = CircuitBreaker.create("gateway-circuit-breaker", vertx,
+        new CircuitBreakerOptions()
+          .setMaxFailures(3) // number of failure before opening the circuit
+          .setMaxRetries(20)
+          .setTimeout(5_000) // consider a failure if the operation does not succeed in time
+          .setResetTimeout(10_000) // time spent in open state before attempting to re-try
+      ).retryPolicy(retryCount -> retryCount * 100L);
     }
     return breaker;
   }
@@ -36,14 +42,32 @@ public class MqttManager {
 
     return getBreaker(vertx).execute(promise -> {
 
-      mqttClient = // create the mqtt client
+      mqttClient = MqttClient.create(vertx, new MqttClientOptions()
+        .setClientId(mqttClientId)
+      ).exceptionHandler(throwable -> {
+        // Netty ?
+        System.out.println(throwable.getMessage());
+      }).closeHandler(voidValue -> {
+        // Connection with broker is lost
+        System.out.println("Connection with broker is lost");
+        // try to connect again
+        startAndConnectMqttClient(vertx);
+      });
 
       // some code executing with the breaker
       // the code reports failures or success on the given promise.
       // if this promise is marked as failed, the breaker increased the
       // number of failures
 
-      // connect the mqttClient
+      mqttClient.connect(mqttPort, mqttHost)
+        .onFailure(error -> {
+          System.out.println("MQTT " + error.getMessage());
+          promise.fail("[" + error.getMessage() + "]");
+        })
+        .onSuccess(ok -> {
+          System.out.println("Connection to the broker is ok");
+          promise.complete();
+        });
 
     });
 

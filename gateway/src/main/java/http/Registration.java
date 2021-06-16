@@ -60,7 +60,6 @@ public class Registration {
     if(checkAuthenticationToken(routingContext)) {
 
       // check the data posted by the device
-      // if the data are compliant, construct the record for registration
       checkRegistrationDataFormat(routingContext,
         errorMessage -> {
           // this is not a device / information missing
@@ -68,8 +67,18 @@ public class Registration {
         },
         registrationData -> {
           // construct the record for registration
-          var record = ...
-          // add metadata (category and position)
+          var record = HttpEndpoint.createRecord(
+            registrationData.getId(),
+            registrationData.getIp(),
+            Integer.parseInt(registrationData.getPort()),
+            "/"
+          );
+          // add metadata
+          record.setMetadata(
+            new JsonObject()
+              .put("category", registrationData.getCategory())
+              .put("position", registrationData.getPosition())
+          );
 
           // search if the record exists in the backend discovery
           getDiscovery().getRecord(rec -> rec.getName().equals(registrationData.getId())) // the Status.DOWN are filtered
@@ -77,10 +86,25 @@ public class Registration {
               System.out.println("Error when fetching the records " + error.getMessage());
             })
             .onSuccess(okRecord -> {
-              // if the lookup succeeded, but no matching service (the record doesn't exist)
-              // then create the record
-              // if the record exists
-              // then update the record
+              if(okRecord==null) {
+                // the lookup succeeded, but no matching service (the record doesn't exist)
+                // create the record
+                publish(record)
+                  .onFailure(error -> System.out.println("Error when publishing " + error.getMessage()))
+                  .onSuccess(ok -> routingContext.json(new JsonObject().put("registration","ok")));
+
+              } else {
+                // The record exists
+                // Update the record
+                okRecord.setStatus(Status.UP);
+                okRecord.setMetadata(
+                  new JsonObject()
+                    .put("category", registrationData.getCategory())
+                    .put("position", registrationData.getPosition()));
+                update(okRecord)
+                  .onFailure(error -> System.out.println("Error when updating " + error.getMessage()))
+                  .onSuccess(ok -> routingContext.json(new JsonObject().put("registration updated","ok")));
+              }
             });
         });
 

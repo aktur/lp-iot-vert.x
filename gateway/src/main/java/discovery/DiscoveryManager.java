@@ -18,13 +18,19 @@ public class DiscoveryManager {
     var redisPort = Integer.parseInt(Optional.ofNullable(System.getenv("REDIS_PORT")).orElse("6379"));
     var redisAuth = Optional.ofNullable(System.getenv("REDIS_PASSWORD")).orElse("");
 
-    var redisConnectionString = ...
+    var redisConnectionString = redisAuth.isEmpty()
+      ? "redis://"+redisHost+":"+redisPort
+      : "redis://user:"+redisAuth+"@"+redisHost+":"+redisPort;
     /*
       Initialize the ServiceDiscovery
       Set the backend configuration
-      return the ServiceDiscovery instance
+      In the last milestone, check if the Redis Db is connected
    */
-
-    return ServiceDiscovery.create ...
+    return ServiceDiscovery.create(vertx, new ServiceDiscoveryOptions()
+      .setBackendConfiguration(
+        new JsonObject()
+          .put("connectionString", redisConnectionString)
+          .put("key", "devices_records")
+      ));
   }
 }
