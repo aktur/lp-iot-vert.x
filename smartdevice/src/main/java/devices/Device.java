@@ -1,11 +1,9 @@
 package devices;
 
-import sensors.Sensor;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import sensors.Sensor;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -32,8 +30,8 @@ public interface Device {
 
     return new JsonObject()
       .put("id", getId())
-      .put("category", getCategory())
       .put("location", getPosition())
+      .put("category", getCategory())
       .put("sensors", new JsonArray(jsonSensorsArray));
   }
 }
