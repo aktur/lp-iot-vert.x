@@ -13,12 +13,14 @@ public class EndPointHandler {
        MqttEndpoint represents an MQTT endpoint for point-to-point
        communication with the remote MQTT client
     */
+    Store.getMqttEndpoints().put(mqttEndpoint.clientIdentifier(), mqttEndpoint);
 
     // ---------------------------------------
     //  Accept the endpoint
     // ---------------------------------------
+    mqttEndpoint.accept();
 
-
+    System.out.println("MQTT Client " + mqttEndpoint.clientIdentifier() + " connected");
 
     // ---------------------------------------
     //  Add handlers to the new MQTT endpoint

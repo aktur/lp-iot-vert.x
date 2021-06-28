@@ -28,13 +28,16 @@ public class SubscribeHandler {
         // -------------------------------------------------
         //  Add mqtt subscription to the subscriptions list
         // -------------------------------------------------
-
-
+        Store.getMqttSubscriptions().put(
+          mqttTopicSubscription.topicName() + "@" + mqttEndpoint.clientIdentifier(),
+          new MqttSubscription(mqttTopicSubscription.topicName(), mqttEndpoint)
+        );
       });
 
       // ---------------------------------------
       //  Acknowledge the subscriptions request
       // ---------------------------------------
+      mqttEndpoint.subscribeAcknowledge(mqttSubscribeMessage.messageId(), grantedQosLevels);
 
     };
 

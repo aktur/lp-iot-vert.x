@@ -11,7 +11,7 @@ public class DisconnectHandler {
       // ---------------------------------------
       //  Remove the endpoint from the list
       // ---------------------------------------
-
+      Store.getMqttEndpoints().remove(mqttEndpoint.clientIdentifier());
     };
   }
 }

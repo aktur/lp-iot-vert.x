@@ -25,19 +25,19 @@ public class MainVerticle extends AbstractVerticle {
       ------------------------------------
     */
     // MongoDb parameters
-    var mongoPort =
-    var mongoHost =
-    var mongoBaseName =
+    var mongoPort = Integer.parseInt(Optional.ofNullable(System.getenv("MONGO_PORT")).orElse("27017"));
+    var mongoHost = Optional.ofNullable(System.getenv("MONGO_HOST")).orElse("localhost");
+    var mongoBaseName = Optional.ofNullable(System.getenv("MONGO_BASE_NAME")).orElse("smarthome_db");
 
     // Initialize the connection to the MongoDb database
-    MongoStore.initialize
+    MongoStore.initialize(vertx, "mongodb://"+mongoHost+":"+mongoPort, mongoBaseName);
 
     // MQTT parameters
-    var mqttPort =
-    var mqttOptions =
+    var mqttPort = Integer.parseInt(Optional.ofNullable(System.getenv("MQTT_PORT")).orElse("1883"));
+    var mqttOptions = new MqttServerOptions().setPort(mqttPort);
 
     // Create the MQTT server
-    var mqttServer =
+    var mqttServer = MqttServer.create(vertx, mqttOptions);
 
     /*
       Create handlers for the broker

@@ -9,7 +9,13 @@ public class MongoStore {
 
   public static void initialize(Vertx vertx, String connectionString, String dataBaseName) {
     // Create a MongoClient instance
-    mongoClient = ...
+    mongoClient = MongoClient.createShared(
+      vertx,
+      new JsonObject()
+        .put("db_name",dataBaseName)
+        .put("useObjectId", false)
+        .put("connection_string", connectionString)
+    );
   }
 
   public static MongoClient getMongoClient() {
