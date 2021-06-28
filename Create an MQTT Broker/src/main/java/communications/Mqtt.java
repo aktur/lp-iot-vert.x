@@ -19,14 +19,24 @@ public interface Mqtt {
   MqttClient getMqttClient();
   void setMqttClient(MqttClient client);
 
-  // Get an instance of the MQTT client
   default MqttClient createMqttClient(Vertx vertx) {
     // Give an id to the device
     var mqttClientId = Optional.ofNullable(System.getenv("MQTT_CLIENT_ID")).orElse("mqttDevice");
 
     // Get and return an instance of the MQTT client
     // add handlers to handle the connection issues
-    return null;
+    return MqttClient.create(vertx, new MqttClientOptions().setClientId(mqttClientId)
+    ).exceptionHandler(throwable -> {
+      // Usually, this handler allows to catch Netty errors
+      // there is a bug with this part (it does not prevent the program to work)
+      // I asked the Vert.x team - stay tuned
+      System.out.println(throwable.getMessage());
+    }).closeHandler(voidValue -> {
+      // this handler is executed when the client loose the connection
+      System.out.println("The connection with the broker is lost");
+      // try to reconnect
+      startAndConnectMqttClient(vertx);
+    });
   };
 
   // try to connect to the MQTT broker
@@ -37,20 +47,36 @@ public interface Mqtt {
     var mqttHost = Optional.ofNullable(System.getenv("MQTT_HOST")).orElse("mqtt.home.smart");
 
     // Get and return the circuit breaker
-    // the circuit breaker will create the MQTT client
-    // and then try to connect
-    // when connected, it will set the mqttClient field
-    return null;
+    return getBreaker(vertx).execute(promise -> {
+
+      // create the MQTT client
+      var mqttClient = createMqttClient(vertx);
+
+      // connect to the MQTT broker
+      mqttClient.connect(mqttPort, mqttHost)
+        .onFailure(error -> {
+          System.out.println("MQTT " + error.getMessage());
+          promise.fail("[" + error.getMessage() + "]");
+        })
+        .onSuccess(ok -> {
+          System.out.println("The connection looks good");
+          // make the broker available for the other classes
+          setMqttClient(mqttClient);
+          promise.complete();
+        });
+
+    });
   };
 
   default CircuitBreaker getBreaker(Vertx vertx) {
-    // Create and return a circuit breaker with:
-    // - max of failure = 3
-    // - max of retries = 20
-    // - timeout = 5000 ms
-    // - reset timeout = 10 000 ms
-    // - add a delay between every retry
-    return null;
+    // Create and return a circuit breaker
+    return CircuitBreaker.create("device-circuit-breaker", vertx,
+      new CircuitBreakerOptions()
+        .setMaxFailures(3) // number of failure before opening the circuit
+        .setMaxRetries(20)
+        .setTimeout(5_000) // consider a failure if the operation does not succeed in time
+        .setResetTimeout(10_000) // time spent in open state before attempting to re-try
+    ).retryPolicy(retryCount -> retryCount * 100L); // add delay between every retry
   }
 
 }

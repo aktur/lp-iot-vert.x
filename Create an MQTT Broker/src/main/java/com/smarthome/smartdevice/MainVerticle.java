@@ -117,14 +117,33 @@ public class MainVerticle extends AbstractVerticle {
     /*
       Initialize the device (new MqttDevice(deviceId))
       - define category of device
-      - define position and list of sensors (like with the HTTP device)
+      - define position and list of sensors
      */
-      var mqttDevice = ...
+      var mqttDevice = new MqttDevice(deviceId)
+        .setCategory(deviceType)
+        .setPosition(deviceLocation)
+        .setSensors(List.of(
+          new TemperatureSensor(),
+          new HumiditySensor(),
+          new eCO2Sensor()
+        ));
 
       // Connect the MQTT client of the device
-      // when the client is connected:
-      // start to publish he environmental data, every 5 seconds on the MQTT topic
-
+      mqttDevice.startAndConnectMqttClient(vertx)
+        .onFailure(error -> {
+          System.out.println(error.getMessage());
+        })
+        .onSuccess(ok -> {
+          // Start publishing the environmental data
+          vertx.setPeriodic(5000, handler -> {
+            mqttDevice.getMqttClient().publish(mqttTopic,
+              Buffer.buffer(mqttDevice.jsonValue().encode()),
+              MqttQoS.AT_LEAST_ONCE,
+              false,
+              false
+            );
+          });
+        });
     }
   }
 
