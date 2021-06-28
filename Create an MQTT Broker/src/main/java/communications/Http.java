@@ -8,8 +8,7 @@ import io.vertx.ext.web.Router;
 import io.vertx.ext.web.client.HttpRequest;
 import io.vertx.ext.web.client.WebClient;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
+import java.util.Optional;
 
 public interface Http {
 
@@ -37,23 +36,8 @@ public interface Http {
     return vertx.createHttpServer().requestHandler(router);
   }
 
-  default InetAddress getInetAddress() {
-    try {
-      return InetAddress.getLocalHost();
-    } catch (UnknownHostException e) {
-      e.printStackTrace();
-      return null;
-    }
-  }
-
-  default String getIP() {
-    var inetAddress = getInetAddress();
-    return inetAddress != null ? inetAddress.getHostAddress() : null;
-  }
-
   default String getHostName() {
-    var inetAddress = getInetAddress();
-    return inetAddress != null ? inetAddress.getHostName() : null;
+    return Optional.ofNullable(System.getenv("DEVICE_HOSTNAME")).orElse("devices.home.smart");
   }
 
   int getPort();

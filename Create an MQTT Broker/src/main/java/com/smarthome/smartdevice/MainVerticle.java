@@ -66,13 +66,14 @@ public class MainVerticle extends AbstractVerticle {
      */
       var requestToGateway = httpDevice.createRegisterToGatewayRequest(vertx, domainNameOrIP, gatewayHttPort, ssl, authenticationToken);
 
-      requestToGateway.sendJsonObject(new JsonObject()
+      var registration = new JsonObject()
         .put("category",httpDevice.getCategory())
-        .put("id", httpDevice.getId())
+        .put("id", httpDevice.getHostName())
         .put("position", httpDevice.getPosition())
-        .put("ip", httpDevice.getIP())
-        .put("port", httpDevice.getPort())
-      )
+        .put("host", httpDevice.getHostName())
+        .put("port", httpDevice.getPort());
+
+      requestToGateway.sendJsonObject(registration)
         .onFailure(error -> {
           System.out.println("Connection to the Gateway failed: " + error.getMessage());
           httpDevice.setConnectedToGateway(false);
@@ -111,6 +112,18 @@ public class MainVerticle extends AbstractVerticle {
         });
     } else { // MQTT device
 
+      var mqttTopic = Optional.ofNullable(System.getenv("MQTT_TOPIC")).orElse("house");
+
+    /*
+      Initialize the device (new MqttDevice(deviceId))
+      - define category of device
+      - define position and list of sensors (like with the HTTP device)
+     */
+      var mqttDevice = ...
+
+      // Connect the MQTT client of the device
+      // when the client is connected:
+      // start to publish he environmental data, every 5 seconds on the MQTT topic
 
     }
   }
