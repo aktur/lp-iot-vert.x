@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0" />
+  <title>SmartHome</title>
+  <script src="/js/sockjs.js"></script>
+  <script src="/js/vertx-eventbus.js"></script>
+</head>
+<body>
+<h1>Work in Progress</h1>
+<script type="module">
+
+  fetch('/authenticate', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      username: "root",
+      password: "admin"
+    }),
+  }).then(response => response.json())
+    .then(data => {
+      console.log('Success:', data)
+
+      // Use EventBus to get and display the data from the server
+      // Display data with console.log()
+
+    })
+    .catch((error) => {
+      console.error('Error:', error)
+
+    })
+
+</script>
+</body>
+
+</html>
+
