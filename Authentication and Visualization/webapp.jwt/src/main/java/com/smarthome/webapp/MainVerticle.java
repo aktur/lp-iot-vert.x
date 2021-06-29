@@ -61,14 +61,30 @@ public class MainVerticle extends AbstractVerticle {
 
     */
     router.post("/authenticate").handler(routingContext -> {
-      // get the username and password from the request
 
-      // check if the user is the Admin user
-      // if yes set the authenticated field to true
-      //    - generate te token with additional data: {"greetingMessage", "Welcome "+user}
-      //    - send the token: {token: token} & status code is 200
-      // else status code is 401 and {message: "Bad JWT Token"}
+      var payload = routingContext.getBodyAsJson();
+      var user = payload.getString("username");
+      var pwd = payload.getString("password");
 
+      routingContext.response()
+        .putHeader("Content-Type", "application/jwt");
+
+      if(user.equals(adminUser.getName()) && pwd.equals(adminUser.getPassword())) {
+        // this adminUser object allows to check the authentication when using the service bus
+        adminUser.setAuthenticated(true);
+
+        // generate a token
+        var token = jwtHelper.generateToken(user, new JsonObject().put("greetingMessage", "Welcome "+user));
+        // answer with token
+
+        routingContext
+          .response().setStatusCode(200)
+          .send(new JsonObject().put("token", token).encode());
+      } else  {
+        routingContext
+          .response().setStatusCode(401)
+          .send(new JsonObject().put("message", "Bad JWT Token").encode());
+      }
     });
 
     // protect the root with the jwtHandler
@@ -83,17 +99,19 @@ public class MainVerticle extends AbstractVerticle {
            --header "Authorization: Bearer ${TOKEN}" \
            --url http://localhost:8080/say-hello
      */
-    router.get("/say-hello").handler().handler(routingContext -> {
+    router.get("/say-hello").handler(jwtHandler).handler(routingContext -> {
       // get the subject of the token (the user name in our case)
+      String subject = routingContext.user().principal().getString("sub");
       // get the additional data
-      // send data with subject and additional data: {greetingMessage: greetingMessage, subject: subject}
+      String greetingMessage = routingContext.user().principal().getString("greetingMessage");
+      // send data
+      routingContext.json(new JsonObject().put("greetingMessage", greetingMessage).put("subject",subject));
     });
 
     // protect the root with the jwtHandler
-    router.get("/disconnect").handler().handler(routingContext -> {
-      // set the authenticated field of the AdminUser to true
-      // reply: {"message": "disconnected"}
-
+    router.get("/disconnect").handler(jwtHandler).handler(routingContext -> {
+      adminUser.setAuthenticated(false);
+      routingContext.json(new JsonObject().put("message", "disconnected"));
     });
 
 

@@ -22,16 +22,22 @@ public class JwtHelper {
 
   // Define jwt options
   private static JWTAuthOptions generateConfig() {
-    // read the public key
     String publicKeyContent = null;
-
-    // read the private key
+    try {
+      publicKeyContent = String.join("\n", Files.readAllLines(Paths.get("./public_key.pem"), StandardCharsets.UTF_8));
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
     String privateKeyContent = null;
+    try {
+      privateKeyContent = String.join("\n", Files.readAllLines(Paths.get("./private_key.pem"), StandardCharsets.UTF_8));
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
 
-
-    // return JWTAuthOptions with the RS256 algorithm
     return new JWTAuthOptions()
-
+      .addPubSecKey(new PubSecKeyOptions().setAlgorithm("RS256").setBuffer(publicKeyContent))
+      .addPubSecKey(new PubSecKeyOptions().setAlgorithm("RS256").setBuffer(privateKeyContent));
   }
 
   public static JwtHelper initialize(Vertx vertx)  {
