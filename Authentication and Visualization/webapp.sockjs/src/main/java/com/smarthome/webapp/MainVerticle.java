@@ -23,17 +23,48 @@ public class MainVerticle extends AbstractVerticle {
 
   AdminUser adminUser;
 
-  // Define options to use the Event Bus
+  // Options to use the Event Bus
+  PermittedOptions permittedOption = new PermittedOptions().setAddress("service.message");
+  SockJSBridgeOptions bridgeOptions = new SockJSBridgeOptions().addOutboundPermitted(permittedOption);
 
   // We'll use this handler to check if the Admin User is authenticated
   // If yes, we can resume the routing
-  // Define an authentication handler
+  Handler<RoutingContext> isAuthenticatedHandler = routingContext -> {
+    if(adminUser.isAuthenticated()) {
+      routingContext.next();
+    } else {
+      routingContext.fail(403);
+    }
+  };
 
-  // Define a bridge event handler
   // this handler is triggered at every event
   // it is not mandatory for this project, but it's useful to follow the data flux
+  Handler<BridgeEvent> bridgeEventHandler = bridgeEvent -> {
+    System.out.println("websocket event:"+ bridgeEvent.type());
+    System.out.println(bridgeEvent.getRawMessage());
+    bridgeEvent.complete(true);
+  };
 
-  // Implement a startStreaming method
+  void startStreaming(Integer delay) {
+    // every n milliseconds
+    vertx.periodicStream(delay).toFlowable()
+      .subscribe(
+        id -> {
+          // retrieve a stream of the 10 latest documents
+          MongoStore.getLastDevicesMetricsFlowable(10)
+            .subscribe(doc -> {
+              // at every found document push it to the browser
+              System.out.println(doc.getString("_id"));
+              vertx.eventBus().publish("service.message", doc.encodePrettily());
+            }, throwable -> {
+              System.out.println(throwable.getMessage());
+            }, () -> {
+              System.out.println("All documents found");
+            });
+        }
+      );
+  }
+
 
   @Override
   public Completable rxStop() {
@@ -149,12 +180,11 @@ public class MainVerticle extends AbstractVerticle {
 
 
     // =============== Begin SockJS ===============
+    SockJSHandler sockJSHandler = SockJSHandler.create(vertx);
+    //sockJSHandler.bridge(bridgeOptions);
+    sockJSHandler.bridge(bridgeOptions, bridgeEventHandler);
 
-    // Create the sockjs handler
-    // Set the bridge with the options and the handler
-    // Set the "/eventbus/*" route (and protect is)
-
-
+    router.route("/eventbus/*").handler(isAuthenticatedHandler).handler(sockJSHandler);
     // =============== End Of SockJS ===============
 
     // =============== Start the http server  ===============
@@ -163,8 +193,6 @@ public class MainVerticle extends AbstractVerticle {
     return httpserver.rxListen(httpPort)
       .doOnSuccess(ok-> {
         System.out.println("Web Application: HTTP server started on port " + httpPort);
-
-        // [SockJS] Start the stream of the data to send data to the event bus
         startStreaming(3000);
       }).doOnError(error -> {
         System.out.println(error.getCause().getMessage());

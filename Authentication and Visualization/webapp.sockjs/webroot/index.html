@@ -10,7 +10,6 @@
 <body>
 <h1>Work in Progress</h1>
 <script type="module">
-
   fetch('/authenticate', {
     method: 'POST',
     headers: {
@@ -24,8 +23,16 @@
     .then(data => {
       console.log('Success:', data)
 
-      // Use EventBus to get and display the data from the server
-      // Display data with console.log()
+      let eventBus = new EventBus(`/eventbus`)
+      eventBus.enableReconnect(true)
+
+      eventBus.onopen = _ => {
+        eventBus.registerHandler("service.message", (error, message) => {
+          let data = JSON.parse(message.body)
+          let device = data["device"]
+          console.log(device)
+        })
+      }
 
     })
     .catch((error) => {
