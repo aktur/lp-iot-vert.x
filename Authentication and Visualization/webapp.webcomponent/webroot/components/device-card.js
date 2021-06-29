@@ -41,22 +41,88 @@ class DeviceCard extends HTMLElement {
     this.eCo2Info = this.shadowRoot.querySelector(".eco2-info")
 
     // Initialize and add graphs here
+    this.temperatureChartConfig = {
+      type: 'line',
+      data: {
+        labels: ['1','2','3','4','5','6','7','8','9','10'],
+        datasets: [{
+          label: 'Temperature (last 10 metrics)',
+          backgroundColor: 'rgb(255, 99, 132)',
+          borderColor: 'rgb(255, 99, 132)',
+          data: []
+        }]
+      },
+      options: {
+        aspectRatio:4
+      }
+    }
+    this.temperatureChart = new Chart(
+      this.temperatureInfo,
+      this.temperatureChartConfig
+    )
 
+    this.humidityChartConfig = {
+      type: 'line',
+      data: {
+        labels: ['1','2','3','4','5','6','7','8','9','10'],
+        datasets: [{
+          label: 'Humidity (last 10 metrics)',
+          backgroundColor: 'rgb(99,224,255)',
+          borderColor: 'rgb(99,224,255)',
+          data: []
+        }]
+      },
+      options: {
+        aspectRatio:4
+      }
+    }
+    this.humidityChart = new Chart(
+      this.humidityInfo,
+      this.humidityChartConfig
+    )
+
+    this.eCo2ChartConfig = {
+      type: 'line',
+      data: {
+        labels: ['1','2','3','4','5','6','7','8','9','10'],
+        datasets: [{
+          label: 'ECO2 (last 10 metrics)',
+          backgroundColor: 'rgb(164,99,255)',
+          borderColor: 'rgb(164,99,255)',
+          data: []
+        }]
+      },
+      options: {
+        aspectRatio:4
+      }
+    }
+    this.eCo2Chart = new Chart(
+      this.eCo2Info,
+      this.eCo2ChartConfig
+    )
   }
 
   setTitle(title) {
+    this.cardTitle.innerHTML = title
   }
 
   setDeviceInfo(title) {
+    this.deviceInfo.innerHTML = title
   }
 
   setTemperatureInfo(metrics) {
+    this.temperatureChart.data.datasets[0].data = metrics
+    this.temperatureChart.update()
   }
 
   setHumidityInfo(metrics) {
+    this.humidityChart.data.datasets[0].data = metrics
+    this.humidityChart.update()
   }
 
   setECo2Info(metrics) {
+    this.eCo2Chart.data.datasets[0].data = metrics
+    this.eCo2Chart.update()
   }
 
 }

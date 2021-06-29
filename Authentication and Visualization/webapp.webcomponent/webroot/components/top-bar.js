@@ -22,7 +22,7 @@ class TopBar extends HTMLElement {
     super()
     this.attachShadow({mode: 'open'})
     this.shadowRoot.appendChild(template.content.cloneNode(true))
-    this.shadowRoot.adoptedStyleSheets = [Style.sheets.bulma]
+    this.shadowRoot.adoptedStyleSheets = [Style.sheets.bulma] // you can add several sheets
   }
 
 }

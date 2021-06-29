@@ -30,11 +30,36 @@ class DevicesList extends HTMLElement {
 
   // this is called when a new device is connected
   newDevice(deviceId, device) {
+    console.log("🌤 new device is connected", deviceId, device)
+
+    let deviceCard = document.createElement("device-card")
+
+    this.columns.appendChild(deviceCard)
+    deviceCard.setTitle(`${device.topic}/[${device.category}]/${deviceId}`)
+
+    deviceCard.setDeviceInfo(`
+      <ul>
+        <li>Location: ${device.location}</li>
+        <li>${device.date}/${device.hour}</li>
+      </ul>
+    `)
+    this.devices[deviceId] = deviceCard
 
   }
 
   // this is called when the metrics are updated
   newMetrics(deviceId, device) {
+
+    this.devices[deviceId].setDeviceInfo(`
+      <ul>
+        <li>Location: ${device.location}</li>
+        <li>${device.date}/${device.hour}</li>
+      </ul>
+    `)
+
+    this.devices[deviceId].setTemperatureInfo(device.sensors.temperatureMetrics)
+    this.devices[deviceId].setHumidityInfo(device.sensors.humidityMetrics)
+    this.devices[deviceId].setECo2Info(device.sensors.eCO2Metrics)
 
   }
 

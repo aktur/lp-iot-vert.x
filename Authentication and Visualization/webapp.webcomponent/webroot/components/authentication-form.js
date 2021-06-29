@@ -32,7 +32,10 @@ class AuthenticationForm extends HTMLElement {
   }
 
   getUser() {
-
+    return {
+      username: this.fieldUserName.value,
+      password: this.fieldPassword.value
+    }
   }
 
   connectedCallback() {
@@ -43,6 +46,94 @@ class AuthenticationForm extends HTMLElement {
     this.fieldPassword = this.shadowRoot.querySelector(`[name="password"]`)
     this.authenticationMessage = this.shadowRoot.querySelector(`[name="message"]`)
 
+    btnConnect.addEventListener('click', event => {
+
+      fetch('/authenticate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(this.getUser()),
+      })
+        .then(response => response.json())
+        .then(data => {
+          console.log('Success:', data)
+
+          sessionStorage.setItem("smarthome-user-token", data.token)
+
+          /*
+           curl --header "content-type: application/json" \
+           --header "Authorization: Bearer ${TOKEN}" \
+           --url http://localhost:8080/say-hello
+           */
+          // get the greeting message
+          fetch('/say-hello', {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${sessionStorage.getItem("smarthome-user-token")}`
+            },
+          })
+            .then(response => response.json())
+            .then(data => {
+              console.log('Success:', data)
+              this.authenticationMessage.innerHTML = data.greetingMessage
+            })
+            .catch((error) => {
+              console.error('Error:', error)
+              this.authenticationMessage.innerHTML = "Oups!"
+            });
+
+
+          this.dispatchEvent(
+            new CustomEvent('is-authenticated', {
+              bubbles: true, composed: true, detail: {
+                name: this.fieldUserName.value
+              }
+            })
+          )
+          this.fieldUserName.value = ""
+          this.fieldPassword.value = ""
+
+
+        })
+        .catch((error) => {
+          console.error('Error:', error)
+          this.authenticationMessage.innerHTML = `Bad credentials, please try again!`
+          sessionStorage.clear()
+        })
+    })
+
+    btnDisConnect.addEventListener('click', event => {
+      console.log("dis-connect")
+
+      fetch('/disconnect', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${sessionStorage.getItem("smarthome-user-token")}`
+        }
+      })
+        .then(response => response.json())
+        .then(data => {
+          console.log('Success:', data)
+          this.authenticationMessage.innerHTML = `Good Bye`
+
+          sessionStorage.setItem("smarthome-user-token", null)
+
+          this.dispatchEvent(
+            new CustomEvent('is-disconnected', {
+              bubbles: true, composed: true, detail: {}
+            })
+          )
+
+        })
+        .catch((error) => {
+          console.error('Error:', error)
+          sessionStorage.clear()
+        })
+
+    })
   }
 
 }
